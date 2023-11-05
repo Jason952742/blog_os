@@ -17,7 +17,7 @@ pub extern "C" fn _start() -> ! {
     blog_os::init();
 
     // invoke a breakpoint exception
-    x86_64::instructions::interrupts::int3();
+    // x86_64::instructions::interrupts::int3();
 
     // trigger a page fault
     // unsafe {
@@ -29,13 +29,13 @@ pub extern "C" fn _start() -> ! {
     }
 
     // trigger a stack overflow
-    stack_overflow();
+    // stack_overflow();
 
     #[cfg(test)]
     test_main();
 
     println!("It did not crash!");
-    loop {}
+    blog_os::hlt_loop();            // new
 }
 
 /// This function is called on panic.
@@ -43,7 +43,7 @@ pub extern "C" fn _start() -> ! {
 #[panic_handler]
 fn panic(info: &PanicInfo) -> ! {
     println!("{}", info);
-    loop {}
+    blog_os::hlt_loop();            // new
 }
 
 #[cfg(test)]
