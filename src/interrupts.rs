@@ -5,6 +5,8 @@ use crate::gdt;
 use pic8259::ChainedPics;
 use spin;
 use crate::print;
+use x86_64::structures::idt::PageFaultErrorCode;
+use crate::hlt_loop;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
@@ -55,12 +57,27 @@ lazy_static! {
         idt[InterruptIndex::Keyboard.as_usize()]
             .set_handler_fn(keyboard_interrupt_handler);
 
+        idt.page_fault.set_handler_fn(page_fault_handler); // new
+
         idt
     };
 }
 
 pub fn init_idt() {
     IDT.load();
+}
+
+extern "x86-interrupt" fn page_fault_handler(
+    stack_frame: InterruptStackFrame,
+    error_code: PageFaultErrorCode,
+) {
+    use x86_64::registers::control::Cr2;
+
+    println!("EXCEPTION: PAGE FAULT");
+    println!("Accessed Address: {:?}", Cr2::read());
+    println!("Error Code: {:?}", error_code);
+    println!("{:#?}", stack_frame);
+    hlt_loop();
 }
 
 extern "x86-interrupt" fn keyboard_interrupt_handler(
