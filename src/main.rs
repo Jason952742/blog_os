@@ -6,20 +6,20 @@
 
 use core::panic::PanicInfo;
 use blog_os::println;
+use bootloader::{BootInfo, entry_point};
+use x86_64::structures::paging::PageTable;
 
-#[no_mangle] // don't mangle the name of this function
-pub extern "C" fn _start() -> ! {
-    // this function is the entry point, since the linker looks for a function
-    // named `_start` by default
+entry_point!(kernel_main);
+
+fn kernel_main(boot_info: &'static BootInfo) -> ! {
+    use blog_os::memory::BootInfoFrameAllocator;
 
     println!("Hello World{}", "!");
-
     blog_os::init();
 
-    use x86_64::registers::control::Cr3;
-
-    let (level_4_page_table, _) = Cr3::read();
-    println!("Level 4 page table at: {:?}", level_4_page_table.start_address());
+    let mut frame_allocator = unsafe {
+        BootInfoFrameAllocator::init(&boot_info.memory_map)
+    };
 
     #[cfg(test)]
     test_main();
